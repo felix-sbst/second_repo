@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bestellung - Vereinsstand</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 15px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    .product-button {
+      display: inline-block;
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .product-button:hover {
+      background-color: #45a049;
+    }
+    .remove-button {
+      margin-left: 10px;
+      padding: 3px 8px;
+      font-size: 12px;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      vertical-align: middle;
+    }
+    .remove-button:hover {
+      background-color: #d32f2f;
+    }
+    #order-summary {
+      margin-top: 20px;
+      font-size: 18px;
+    }
+    #order-list {
+      list-style-type: none; /* Entfernt Aufzählungszeichen */
+      padding: 0;
+      margin: 0 auto; /* Zentriert die Liste */
+      display: inline-block; /* Verhindert, dass die Liste die gesamte Breite einnimmt */
+      text-align: left; /* Inhalt der Liste bleibt linksbündig */
+    }
+    #order-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 5px 0;
+    }
+    #total, #change {
+      font-size: 24px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    .input-field {
+      margin-top: 20px;
+    }
+    .reset-button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .reset-button:hover {
+      background-color: #d32f2f;
+    }
+  </style>
+</head>
+<body>
+  <h1>Jugendfeuerwehr Leutkirch - Weihnachtsmarkt</h1>
+  <div id="products"></div>
+
+  <h2>Tassenrückgabe</h2>
+  <div id="bottle-returns"></div>
+
+  <div id="order-summary">
+    <p>Bestellung:</p>
+    <ul id="order-list"></ul>
+    <p id="total">Gesamt: 0,00 €</p>
+
+    <div class="input-field">
+      <label>Erhaltener Betrag (€): </label>
+      <input type="number" id="received-amount" value="0" min="0" oninput="calculateChange()" />
+    </div>
+    <p id="change">Rückgeld: 0,00 €</p>
+
+    <button class="reset-button" onclick="resetOrder()">Bestellung zurücksetzen</button>
+  </div>
+
+  <script>
+	let general_deposit = 4.00;
+    // Produktliste mit Preisen und Pfand
+    const products = [
+      { name: "Glühwein", price: 3.50, deposit: 4.00 },
+      { name: "Teepunsch", price: 2.50, deposit: 4.00 },
+      { name: "Crepe Zimt-Zucker", price: 3.00, deposit: 0 },
+      { name: "Crepe Nutella", price: 3.50, deposit: 0 },
+      { name: "Crepe Speck-Käse", price: 4.00, deposit: 0 }
+    ];
+
+    let order = {};
+    let returnedBottles = 0;
+
+    // Produkte dynamisch anzeigen
+    const productContainer = document.getElementById("products");
+    products.forEach((product, index) => {
+      const button = document.createElement("button");
+      button.textContent = `${product.name} - ${product.price.toFixed(2)} €`;
+      button.className = "product-button";
+      button.onclick = () => addToOrder(index);
+      productContainer.appendChild(button);
+    });
+
+    // Flaschenrückgabe-Buttons hinzufügen
+    const bottleReturnsContainer = document.getElementById("bottle-returns");
+    const bottleButton = document.createElement("button");
+    bottleButton.textContent = `Flasche zurückgeben - ${general_deposit.toFixed(2)} € Gutschrift`;
+    bottleButton.className = "product-button";
+    bottleButton.onclick = () => returnBottle();
+    bottleReturnsContainer.appendChild(bottleButton);
+
+    // Funktion: Produkt zur Bestellung hinzufügen
+    function addToOrder(index) {
+      const product = products[index];
+      if (order[product.name]) {
+        order[product.name].quantity++;
+      } else {
+        order[product.name] = { ...product, quantity: 1 };
+      }
+      updateOrderSummary();
+    }
+
+    // Funktion: Produkt aus Bestellung entfernen
+    function removeFromOrder(productName) {
+      if (order[productName]) {
+        order[productName].quantity--;
+        if (order[productName].quantity <= 0) {
+          delete order[productName];
+        }
+        updateOrderSummary();
+      }
+    }
+
+    // Funktion: Flasche zurückgeben
+    function returnBottle() {
+      returnedBottles++;
+      updateOrderSummary();
+    }
+
+    // Funktion: Bestellung aktualisieren
+    function updateOrderSummary() {
+      const orderList = document.getElementById("order-list");
+      const totalElement = document.getElementById("total");
+      orderList.innerHTML = ""; // Liste zurücksetzen
+      let total = 0;
+
+      for (const [name, item] of Object.entries(order)) {
+        const depositInfo = item.deposit > 0 ? ` (+ ${item.deposit.toFixed(2)} € Pfand)` : "";
+        const listItem = document.createElement("li");
+        listItem.innerHTML = `<span>${item.quantity}x ${name} - ${(item.price * item.quantity).toFixed(2)} €${depositInfo}</span>`;
+        
+        // Entfernen-Button hinzufügen
+        const removeButton = document.createElement("button");
+        removeButton.textContent = "Entfernen";
+        removeButton.className = "remove-button";
+        removeButton.onclick = () => removeFromOrder(name);
+        listItem.appendChild(removeButton);
+
+        orderList.appendChild(listItem);
+        total += item.price * item.quantity + item.deposit * item.quantity;
+      }
+
+      // Flaschenrückgabe abziehen
+      const depositRefund = returnedBottles * general_deposit;
+      if (returnedBottles > 0) {
+        const refundItem = document.createElement("li");
+        refundItem.innerHTML = `<span>-${returnedBottles}x Flaschenrückgabe - ${depositRefund.toFixed(2)} €</span>`;
+        orderList.appendChild(refundItem);
+        total -= depositRefund;
+      }
+
+      totalElement.textContent = `Gesamt: ${total.toFixed(2)} €`;
+      calculateChange();
+    }
+
+    // Funktion: Rückgeld berechnen
+    function calculateChange() {
+      const receivedAmount = parseFloat(document.getElementById("received-amount").value) || 0;
+      const total = parseFloat(document.getElementById("total").textContent.replace(/[^0-9.,-]+/g, "").replace(",", ".")) || 0;
+      const change = Math.max(0, receivedAmount - total);
+      document.getElementById("change").textContent = `Rückgeld: ${change.toFixed(2)} €`;
+    }
+
+    // Funktion: Bestellung zurücksetzen
+    function resetOrder() {
+      order = {};
+      returnedBottles = 0;
+      document.getElementById("received-amount").value = 0;
+      updateOrderSummary();
+    }
+  </script>
+</body>
+</html>
