@@ -129,7 +129,7 @@
     // Flaschenrückgabe-Buttons hinzufügen
     const bottleReturnsContainer = document.getElementById("bottle-returns");
     const bottleButton = document.createElement("button");
-    bottleButton.textContent = `Flasche zurückgeben - ${general_deposit.toFixed(2)} € Gutschrift`;
+    bottleButton.textContent = `Tasse zurückgeben - ${general_deposit.toFixed(2)} € Gutschrift`;
     bottleButton.className = "product-button";
     bottleButton.onclick = () => returnBottle();
     bottleReturnsContainer.appendChild(bottleButton);
@@ -189,7 +189,7 @@
       const depositRefund = returnedBottles * general_deposit;
       if (returnedBottles > 0) {
         const refundItem = document.createElement("li");
-        refundItem.innerHTML = `<span>-${returnedBottles}x Flaschenrückgabe - ${depositRefund.toFixed(2)} €</span>`;
+        refundItem.innerHTML = `<span>-${returnedBottles}x Tassenrückgabe - ${depositRefund.toFixed(2)} €</span>`;
         orderList.appendChild(refundItem);
         total -= depositRefund;
       }
